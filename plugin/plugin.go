@@ -9,6 +9,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/djherbis/times"
 	"github.com/docker/go-plugins-helpers/volume"
 )
 
@@ -99,7 +100,12 @@ func (p *Nas) List() (*volume.ListResponse, error) {
 	response.Volumes = make([]*volume.Volume, dircount)
 	dircount = 0
 	for _, info := range infos {
-		v := volume.Volume{Name: info.Name(), Mountpoint: fmt.Sprintf("%s/%s", p.GetMountPoint(), info.Name())}
+		t := times.Get(info)
+		v := volume.Volume{
+			Name:       info.Name(),
+			Mountpoint: fmt.Sprintf("%s/%s", p.GetMountPoint(), info.Name()),
+			CreatedAt:  t.BirthTime().UTC().String(),
+		}
 		response.Volumes[dircount] = &v
 		dircount++
 	}
@@ -114,8 +120,17 @@ func (p *Nas) Get(request *volume.GetRequest) (*volume.GetResponse, error) {
 		log.Printf("%s error getting volume: %s", Name, err)
 		return nil, err
 	}
+	t, err := times.Stat(path)
+	if err != nil {
+		log.Printf("%s cannot stat %s: %s", Name, path, err)
+		return nil, err
+	}
 	response := volume.GetResponse{
-		Volume: &volume.Volume{Name: request.Name, Mountpoint: path},
+		Volume: &volume.Volume{
+			Name: request.Name, 
+			Mountpoint: path,
+			CreatedAt: t.BirthTime().UTC().String()
+		},
 	}
 	return &response, nil
 }
