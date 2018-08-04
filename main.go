@@ -37,17 +37,29 @@ func main() {
 	plugin := plugin.Nas{MountPoint: sysmount}
 	h := volume.NewHandler(&plugin)
 	if listento == "TCP" {
-		log.Printf("Docker Volume Nas plusing listens localhost:%d\n", listenport)
-		h.ServeTCP(plugin.Name(), fmt.Sprintf("localhost:%d", listenport), sdk.WindowsDefaultDaemonRootDir(), nil)
+		address := fmt.Sprintf("localhost:%d", listenport)
+		log.Printf("Docker Volume Nas plusing listens to %s\n", address)
+		err := h.ServeTCP(plugin.Name(), address, sdk.WindowsDefaultDaemonRootDir(), nil)
+		if err != nil {
+			log.Fatalf("error: %s\n", err)
+		}
 	} else if listento == "socket" {
 		if runtime.GOOS == "linux" {
 			u, _ := user.Lookup("root")
 			gid, _ := strconv.Atoi(u.Gid)
-			log.Println("Docker Volume Nas plusing listens to socket")
-			h.ServeUnix(plugin.Name(), gid)
+			address := fmt.Sprintf("/run/docker/plugins/%s.sock", plugin.Name())
+			log.Printf("Docker Volume Nas plusing listens to socket %s\n", address)
+			err := h.ServeUnix(address, gid)
+			if err != nil {
+				log.Fatalf("error: %s\n", err)
+			}
 		} else if runtime.GOOS == "windows" {
-			log.Println("Docker Volume Nas plusing listens to pipe")
-			h.ServeWindows(fmt.Sprintf("\\\\.\\pipe\\%s", plugin.Name()), plugin.Name(), sdk.WindowsDefaultDaemonRootDir(), nil)
+			address := fmt.Sprintf("\\\\.\\pipe\\%s", plugin.Name())
+			log.Printf("Docker Volume Nas plusing listens to socket %s\n", address)
+			err := h.ServeWindows(address, plugin.Name(), sdk.WindowsDefaultDaemonRootDir(), nil)
+			if err != nil {
+				log.Fatalf("error: %s\n", err)
+			}
 		}
 	}
 
