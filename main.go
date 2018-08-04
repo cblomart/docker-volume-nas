@@ -35,7 +35,7 @@ func main() {
 		log.Fatalf("Listen port %d cannot be less than 1000 (system ports)\n", listenport)
 	}
 	plugin := plugin.Nas{}
-	h := volume.NewHandler(plugin)
+	h := volume.NewHandler(&plugin)
 	if listento == "TCP" {
 		h.ServeTCP(plugin.Name(), fmt.Sprintf("locahost:%d", listenport), sdk.WindowsDefaultDaemonRootDir(), nil)
 	} else if listento == "socket" {
