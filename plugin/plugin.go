@@ -159,11 +159,11 @@ func (p *Nas) Unmount(request *volume.UnmountRequest) error {
 }
 
 // Capabilities of the module
-func (p *Nas) Capabilities() volume.CapabilitiesResponse {
+func (p *Nas) Capabilities() *volume.CapabilitiesResponse {
 	response := volume.CapabilitiesResponse{
 		Capabilities: volume.Capability{
 			Scope: "global",
 		},
 	}
-	return response
+	return &response
 }
