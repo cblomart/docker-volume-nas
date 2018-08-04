@@ -40,7 +40,7 @@ func (p *Nas) Remove(*volume.RemoveRequest) error {
 }
 
 // Path returns the path with the mount point
-func (p *Nas) Path(*volume.PathRequest) (*PathResponse, error) {
+func (p *Nas) Path(*volume.PathRequest) (*volume.PathResponse, error) {
 
 }
 
@@ -49,12 +49,12 @@ func (p *Nas) Mount(*volume.MountRequest) (*volume.MountResponse, error) {
 
 }
 
-// Unmout does nothing as the mount point should already be mounted
+// Unmount does nothing as the mount point should already be mounted
 func (p *Nas) Unmount(*volume.UnmountRequest) error {
 
 }
 
-// Returns Capabilities of the module
+// Capabilities of the module
 func (p *Nas) Capabilities() *volume.CapabilitiesResponse {
 
 }
