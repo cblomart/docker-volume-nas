@@ -9,3 +9,8 @@ const (
 type Nas struct {
 	MountPoint string
 }
+
+// Name returns plugin name
+func (p *Nas) Name() string {
+	return Name
+}

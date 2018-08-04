@@ -33,7 +33,7 @@ func main() {
 	plugin := plugin.Nas{}
 	h := volume.NewHandler(plugin)
 	if listento == "TCP" {
-		h.ServeTCP(plugin.Name, fmt.Sprintf(":%d", listenport))
+		h.ServeTCP(plugin.Name(), fmt.Sprintf("locahost:%d", listenport), "", nil)
 	}
 
 }
