@@ -34,16 +34,19 @@ func main() {
 	if listento == "TCP" && listenport < 1000 {
 		log.Fatalf("Listen port %d cannot be less than 1000 (system ports)\n", listenport)
 	}
-	plugin := plugin.Nas{}
+	plugin := plugin.Nas{MountPoint: sysmount}
 	h := volume.NewHandler(&plugin)
 	if listento == "TCP" {
-		h.ServeTCP(plugin.Name(), fmt.Sprintf("locahost:%d", listenport), sdk.WindowsDefaultDaemonRootDir(), nil)
+		log.Printf("Docker Volume Nas plusing listens localhost:%d\n", listenport)
+		h.ServeTCP(plugin.Name(), fmt.Sprintf("localhost:%d", listenport), sdk.WindowsDefaultDaemonRootDir(), nil)
 	} else if listento == "socket" {
 		if runtime.GOOS == "linux" {
 			u, _ := user.Lookup("root")
 			gid, _ := strconv.Atoi(u.Gid)
+			log.Println("Docker Volume Nas plusing listens to socket")
 			h.ServeUnix(plugin.Name(), gid)
 		} else if runtime.GOOS == "windows" {
+			log.Println("Docker Volume Nas plusing listens to pipe")
 			h.ServeWindows(fmt.Sprintf("\\\\.\\pipe\\%s", plugin.Name()), plugin.Name(), sdk.WindowsDefaultDaemonRootDir(), nil)
 		}
 	}
