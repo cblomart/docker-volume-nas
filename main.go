@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log"
 	"os/user"
+	"runtime"
 	"strconv"
 
 	"github.com/cblomart/docker-volume-nas/plugin"
+	"github.com/docker/go-plugins-helpers/sdk"
 	"github.com/docker/go-plugins-helpers/volume"
 )
 
@@ -35,11 +37,15 @@ func main() {
 	plugin := plugin.Nas{}
 	h := volume.NewHandler(plugin)
 	if listento == "TCP" {
-		h.ServeTCP(plugin.Name(), fmt.Sprintf("locahost:%d", listenport), "", nil)
+		h.ServeTCP(plugin.Name(), fmt.Sprintf("locahost:%d", listenport), sdk.WindowsDefaultDaemonRootDir(), nil)
 	} else if listento == "socket" {
-		u, _ := user.Lookup("root")
-		gid, _ := strconv.Atoi(u.Gid)
-		h.ServeUnix(plugin.Name(), gid)
+		if runtime.GOOS == "linux" {
+			u, _ := user.Lookup("root")
+			gid, _ := strconv.Atoi(u.Gid)
+			h.ServeUnix(plugin.Name(), gid)
+		} else if runtime.GOOS == "windows" {
+			h.ServeWindows(fmt.Sprintf("\\\\.\\pipe\\%s", plugin.Name()), plugin.Name(), sdk.WindowsDefaultDaemonRootDir(), nil)
+		}
 	}
 
 }
