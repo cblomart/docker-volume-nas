@@ -111,6 +111,7 @@ func (p *Nas) Get(request *volume.GetRequest) (*volume.GetResponse, error) {
 	log.Printf("%s get volume %s\n", Name, request.Name)
 	path, err := p.CheckVolumePath(request.Name)
 	if err != nil {
+		log.Printf("%s error getting volume: %s", Name, err)
 		return nil, err
 	}
 	response := volume.GetResponse{
