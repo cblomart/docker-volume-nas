@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os/user"
+	"strconv"
 
 	"github.com/cblomart/docker-volume-nas/plugin"
 	"github.com/docker/go-plugins-helpers/volume"
@@ -34,6 +36,10 @@ func main() {
 	h := volume.NewHandler(plugin)
 	if listento == "TCP" {
 		h.ServeTCP(plugin.Name(), fmt.Sprintf("locahost:%d", listenport), "", nil)
+	} else if listento == "socket" {
+		u, _ := user.Lookup("root")
+		gid, _ := strconv.Atoi(u.Gid)
+		h.ServeUnix(plugin.Name(), gid)
 	}
 
 }
