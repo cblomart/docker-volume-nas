@@ -49,6 +49,7 @@ func (p *Nas) CheckVolumePath(name string) (string, error) {
 
 // Create creates a new volume in the mount point
 func (p *Nas) Create(request *volume.CreateRequest) error {
+	log.Printf("%s create volume %s\n", Name, request.Name)
 	path := fmt.Sprintf("%s/%s", p.GetMountPoint(), request.Name)
 	info, err := os.Stat(path)
 	if os.IsNotExist(err) {
@@ -80,6 +81,7 @@ func (p *Nas) Create(request *volume.CreateRequest) error {
 
 // List lists volumes in the mount point
 func (p *Nas) List() (*volume.ListResponse, error) {
+	log.Printf("%s list volumes\n", Name)
 	infos, err := ioutil.ReadDir(p.GetMountPoint())
 	if err != nil {
 		return nil, err
@@ -106,6 +108,7 @@ func (p *Nas) List() (*volume.ListResponse, error) {
 
 // Get gets a specific volume
 func (p *Nas) Get(request *volume.GetRequest) (*volume.GetResponse, error) {
+	log.Printf("%s get volume %s\n", Name, request.Name)
 	path, err := p.CheckVolumePath(request.Name)
 	if err != nil {
 		return nil, err
@@ -118,6 +121,7 @@ func (p *Nas) Get(request *volume.GetRequest) (*volume.GetResponse, error) {
 
 // Remove removes a volume from the mount point
 func (p *Nas) Remove(request *volume.RemoveRequest) error {
+	log.Printf("%s remove volume %s\n", Name, request.Name)
 	path, err := p.CheckVolumePath(request.Name)
 	if err != nil {
 		return err
@@ -127,6 +131,7 @@ func (p *Nas) Remove(request *volume.RemoveRequest) error {
 
 // Path returns the path with the mount point
 func (p *Nas) Path(request *volume.PathRequest) (*volume.PathResponse, error) {
+	log.Printf("%s volume path  %s\n", Name, request.Name)
 	path, err := p.CheckVolumePath(request.Name)
 	if err != nil {
 		return nil, err
@@ -139,6 +144,7 @@ func (p *Nas) Path(request *volume.PathRequest) (*volume.PathResponse, error) {
 
 // Mount does nothing as the mount point should already be mounted
 func (p *Nas) Mount(request *volume.MountRequest) (*volume.MountResponse, error) {
+	log.Printf("%s mount volume %s\n", Name, request.Name)
 	path, err := p.CheckVolumePath(request.Name)
 	if err != nil {
 		return nil, err
@@ -151,6 +157,7 @@ func (p *Nas) Mount(request *volume.MountRequest) (*volume.MountResponse, error)
 
 // Unmount does nothing as the mount point should already be mounted
 func (p *Nas) Unmount(request *volume.UnmountRequest) error {
+	log.Printf("%s unmount volume %s\n", Name, request.Name)
 	_, err := p.CheckVolumePath(request.Name)
 	if err != nil {
 		return err
@@ -160,6 +167,7 @@ func (p *Nas) Unmount(request *volume.UnmountRequest) error {
 
 // Capabilities of the module
 func (p *Nas) Capabilities() *volume.CapabilitiesResponse {
+	log.Printf("%s capabilities\n", Name)
 	response := volume.CapabilitiesResponse{
 		Capabilities: volume.Capability{
 			Scope: "global",
