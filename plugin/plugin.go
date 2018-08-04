@@ -127,9 +127,9 @@ func (p *Nas) Get(request *volume.GetRequest) (*volume.GetResponse, error) {
 	}
 	response := volume.GetResponse{
 		Volume: &volume.Volume{
-			Name: request.Name, 
+			Name:       request.Name,
 			Mountpoint: path,
-			CreatedAt: t.BirthTime().UTC().String()
+			CreatedAt:  t.BirthTime().UTC().String(),
 		},
 	}
 	return &response, nil
