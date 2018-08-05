@@ -3,9 +3,13 @@ package plugin
 import (
 	"encoding/json"
 	"log"
+	"regexp"
 	"runtime"
 	"strconv"
 )
+
+// Regex for volume names
+const nameRegex = "[A-Za-z0-9-_][A-Za-z0-9-_.]+"
 
 // GetID returns a gid or uid from string
 func GetID(id string) int {
@@ -52,4 +56,10 @@ func (p *Nas) dump(v interface{}) {
 			log.Println(string(buf))
 		}
 	}
+}
+
+// CheckName Validates the name of a volume for the nas plugin
+func CheckName(name string) bool {
+	validname := regexp.MustCompile(nameRegex)
+	return validname.MatchString(name)
 }
