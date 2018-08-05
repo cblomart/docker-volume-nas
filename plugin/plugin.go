@@ -85,12 +85,12 @@ func (p *Nas) Create(request *volume.CreateRequest) error {
 }
 
 // List lists volumes in the mount point
-func (p *Nas) List() (volume.ListResponse, error) {
+func (p *Nas) List() (*volume.ListResponse, error) {
 	log.Printf("%s list volumes\n", Name)
 	infos, err := ioutil.ReadDir(p.GetMountPoint())
 	if err != nil {
 		log.Printf("Could not read dir %s\n", err)
-		return volume.ListResponse{}, err
+		return nil, err
 	}
 	// prepare response
 	response := volume.ListResponse{}
@@ -114,16 +114,16 @@ func (p *Nas) List() (volume.ListResponse, error) {
 	}
 	p.verbose("Generated Volume list:")
 	p.dump(response)
-	return response, nil
+	return &response, nil
 }
 
 // Get gets a specific volume
-func (p *Nas) Get(request volume.GetRequest) (volume.GetResponse, error) {
+func (p *Nas) Get(request *volume.GetRequest) (*volume.GetResponse, error) {
 	log.Printf("%s get volume %s\n", Name, request.Name)
 	path, err := p.CheckVolumePath(request.Name)
 	if err != nil {
 		log.Printf("%s error getting volume: %s", Name, err)
-		return volume.GetResponse{}, err
+		return nil, err
 	}
 	response := volume.GetResponse{
 		Volume: &volume.Volume{
@@ -133,7 +133,7 @@ func (p *Nas) Get(request volume.GetRequest) (volume.GetResponse, error) {
 	}
 	p.verbose("Returning volume:")
 	p.dump(response)
-	return response, nil
+	return &response, nil
 }
 
 // Remove removes a volume from the mount point
