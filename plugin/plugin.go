@@ -20,6 +20,7 @@ const (
 // Nas is a simple nas plugin for docker
 type Nas struct {
 	MountPoint string
+	Verbose    bool
 }
 
 // Name returns plugin name
@@ -70,6 +71,7 @@ func (p *Nas) Create(request *volume.CreateRequest) error {
 		return nil
 	}
 	if err != nil {
+		log.Printf("Stat error on path %s: %s", path, err)
 		return err
 	}
 	// path does exist
@@ -77,6 +79,7 @@ func (p *Nas) Create(request *volume.CreateRequest) error {
 		log.Printf("path %s is a file", path)
 		return fmt.Errorf("path %s is a file", path)
 	}
+	p.verbose(fmt.Sprintf("Created volume %s with path %s", request.Name, path))
 	// TODO: check directory owner
 	return nil
 }
@@ -109,6 +112,8 @@ func (p *Nas) List() (*volume.ListResponse, error) {
 		response.Volumes[dircount] = &v
 		dircount++
 	}
+	p.verbose("Generated Volume list:")
+	p.dump(&response)
 	return &response, nil
 }
 
@@ -120,12 +125,15 @@ func (p *Nas) Get(request *volume.GetRequest) (*volume.GetResponse, error) {
 		log.Printf("%s error getting volume: %s", Name, err)
 		return nil, err
 	}
-	return &volume.GetResponse{
+	response := volume.GetResponse{
 		Volume: &volume.Volume{
 			Name:       request.Name,
 			Mountpoint: path,
 		},
-	}, nil
+	}
+	p.verbose("Returning volume:")
+	p.dump(&response)
+	return &response, nil
 }
 
 // Remove removes a volume from the mount point
@@ -147,9 +155,12 @@ func (p *Nas) Path(request *volume.PathRequest) (*volume.PathResponse, error) {
 		log.Printf("Could not check path for %s: %s\n", request.Name, err)
 		return nil, err
 	}
-	return &volume.PathResponse{
+	response := volume.PathResponse{
 		Mountpoint: path,
-	}, nil
+	}
+	p.verbose("Returning path")
+	p.dump(&response)
+	return &response, nil
 }
 
 // Mount does nothing as the mount point should already be mounted
@@ -159,9 +170,12 @@ func (p *Nas) Mount(request *volume.MountRequest) (*volume.MountResponse, error)
 	if err != nil {
 		return nil, err
 	}
-	return &volume.MountResponse{
+	response := volume.MountResponse{
 		Mountpoint: path,
-	}, nil
+	}
+	p.verbose("Mount volume:")
+	p.dump(&response)
+	return &response, nil
 }
 
 // Unmount does nothing as the mount point should already be mounted

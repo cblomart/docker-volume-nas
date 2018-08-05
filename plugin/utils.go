@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"encoding/json"
 	"log"
 	"runtime"
 	"strconv"
@@ -36,4 +37,19 @@ func GetGUID(options map[string]string) (int, int) {
 	}
 	return ouid, ogid
 
+}
+
+func (p *Nas) verbose(message string) {
+	if p.Verbose {
+		log.Println(message)
+	}
+}
+
+func (p *Nas) dump(v interface{}) {
+	if p.Verbose {
+		buf, err := json.Marshal(v)
+		if err == nil {
+			log.Println(string(buf))
+		}
+	}
 }
