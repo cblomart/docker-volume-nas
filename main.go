@@ -9,8 +9,8 @@ import (
 	"strconv"
 
 	"github.com/cblomart/docker-volume-nas/plugin"
-	"github.com/docker/go-plugins-helpers/sdk"
-	"github.com/docker/go-plugins-helpers/volume"
+	"github.com/cblomart/go-plugins-helpers/sdk"
+	"github.com/cblomart/go-plugins-helpers/volume"
 )
 
 var (
