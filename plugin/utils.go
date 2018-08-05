@@ -39,13 +39,13 @@ func GetGUID(options map[string]string) (int, int) {
 
 }
 
-func (p *Nas) verbose(message string) {
+func (p Nas) verbose(message string) {
 	if p.Verbose {
 		log.Println(message)
 	}
 }
 
-func (p *Nas) dump(v interface{}) {
+func (p Nas) dump(v interface{}) {
 	if p.Verbose {
 		buf, err := json.Marshal(v)
 		if err == nil {
