@@ -94,23 +94,14 @@ func (p *Nas) List() (*volume.ListResponse, error) {
 	}
 	// prepare response
 	response := volume.ListResponse{}
-	// count folders
-	dircount := 0
-	for _, info := range infos {
-		if info.IsDir() {
-			dircount++
-		}
-	}
 	// fill in response
-	response.Volumes = make([]*volume.Volume, dircount)
-	dircount = 0
+	response.Volumes = []*volume.Volume{}
 	for _, info := range infos {
 		v := volume.Volume{
 			Name:       info.Name(),
 			Mountpoint: fmt.Sprintf("%s/%s", p.GetMountPoint(), info.Name()),
 		}
-		response.Volumes[dircount] = &v
-		dircount++
+		response.Volumes = append(response.Volumes, &v)
 	}
 	p.verbose("Generated Volume list:")
 	p.dump(response)
