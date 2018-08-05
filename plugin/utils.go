@@ -9,7 +9,7 @@ import (
 )
 
 // Regex for volume names
-const nameRegex = "[A-Za-z0-9-_][A-Za-z0-9-_.]+"
+const nameRegex = "^[A-Za-z0-9-_][A-Za-z0-9-_.]+$"
 
 // GetID returns a gid or uid from string
 func GetID(id string) int {
