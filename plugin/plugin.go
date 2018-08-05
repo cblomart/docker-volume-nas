@@ -14,7 +14,7 @@ import (
 
 const (
 	// Name is the plugin name
-	Name = "nas"
+	Name = "volume-nas"
 )
 
 // Nas is a simple nas plugin for docker
