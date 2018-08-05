@@ -9,7 +9,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/djherbis/times"
 	"github.com/docker/go-plugins-helpers/volume"
 )
 
@@ -64,6 +63,7 @@ func (p *Nas) Create(request *volume.CreateRequest) error {
 		if (uid != 0 || gid != 0) && runtime.GOOS != "windows" {
 			err := syscall.Chown(path, uid, gid)
 			if err != nil {
+				log.Printf("Could not change owner to %d:%d for %s\n", uid, gid, path)
 				return err
 			}
 		}
@@ -74,6 +74,7 @@ func (p *Nas) Create(request *volume.CreateRequest) error {
 	}
 	// path does exist
 	if !info.IsDir() {
+		log.Printf("path %s is a file", path)
 		return fmt.Errorf("path %s is a file", path)
 	}
 	// TODO: check directory owner
@@ -85,6 +86,7 @@ func (p *Nas) List() (*volume.ListResponse, error) {
 	log.Printf("%s list volumes\n", Name)
 	infos, err := ioutil.ReadDir(p.GetMountPoint())
 	if err != nil {
+		log.Printf("Could not read dir %s\n", err)
 		return nil, err
 	}
 	// prepare response
@@ -100,11 +102,9 @@ func (p *Nas) List() (*volume.ListResponse, error) {
 	response.Volumes = make([]*volume.Volume, dircount)
 	dircount = 0
 	for _, info := range infos {
-		t := times.Get(info)
 		v := volume.Volume{
 			Name:       info.Name(),
 			Mountpoint: fmt.Sprintf("%s/%s", p.GetMountPoint(), info.Name()),
-			CreatedAt:  t.BirthTime().UTC().String(),
 		}
 		response.Volumes[dircount] = &v
 		dircount++
@@ -120,19 +120,12 @@ func (p *Nas) Get(request *volume.GetRequest) (*volume.GetResponse, error) {
 		log.Printf("%s error getting volume: %s", Name, err)
 		return nil, err
 	}
-	t, err := times.Stat(path)
-	if err != nil {
-		log.Printf("%s cannot stat %s: %s", Name, path, err)
-		return nil, err
-	}
-	response := volume.GetResponse{
+	return &volume.GetResponse{
 		Volume: &volume.Volume{
 			Name:       request.Name,
 			Mountpoint: path,
-			CreatedAt:  t.BirthTime().UTC().String(),
 		},
-	}
-	return &response, nil
+	}, nil
 }
 
 // Remove removes a volume from the mount point
@@ -140,6 +133,7 @@ func (p *Nas) Remove(request *volume.RemoveRequest) error {
 	log.Printf("%s remove volume %s\n", Name, request.Name)
 	path, err := p.CheckVolumePath(request.Name)
 	if err != nil {
+		log.Printf("Could not check path for %s: %s\n", request.Name, err)
 		return err
 	}
 	return os.RemoveAll(path)
@@ -150,12 +144,12 @@ func (p *Nas) Path(request *volume.PathRequest) (*volume.PathResponse, error) {
 	log.Printf("%s volume path  %s\n", Name, request.Name)
 	path, err := p.CheckVolumePath(request.Name)
 	if err != nil {
+		log.Printf("Could not check path for %s: %s\n", request.Name, err)
 		return nil, err
 	}
-	response := volume.PathResponse{
+	return &volume.PathResponse{
 		Mountpoint: path,
-	}
-	return &response, nil
+	}, nil
 }
 
 // Mount does nothing as the mount point should already be mounted
@@ -165,10 +159,9 @@ func (p *Nas) Mount(request *volume.MountRequest) (*volume.MountResponse, error)
 	if err != nil {
 		return nil, err
 	}
-	response := volume.MountResponse{
+	return &volume.MountResponse{
 		Mountpoint: path,
-	}
-	return &response, nil
+	}, nil
 }
 
 // Unmount does nothing as the mount point should already be mounted
@@ -176,6 +169,7 @@ func (p *Nas) Unmount(request *volume.UnmountRequest) error {
 	log.Printf("%s unmount volume %s\n", Name, request.Name)
 	_, err := p.CheckVolumePath(request.Name)
 	if err != nil {
+		log.Printf("Could not check path for %s: %s\n", request.Name, err)
 		return err
 	}
 	return nil
@@ -184,10 +178,9 @@ func (p *Nas) Unmount(request *volume.UnmountRequest) error {
 // Capabilities of the module
 func (p *Nas) Capabilities() *volume.CapabilitiesResponse {
 	log.Printf("%s capabilities\n", Name)
-	response := volume.CapabilitiesResponse{
+	return &volume.CapabilitiesResponse{
 		Capabilities: volume.Capability{
 			Scope: "global",
 		},
 	}
-	return &response
 }
