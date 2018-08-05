@@ -191,9 +191,9 @@ func (p Nas) Unmount(request volume.UnmountRequest) error {
 }
 
 // Capabilities of the module
-func (p Nas) Capabilities() volume.CapabilitiesResponse {
+func (p Nas) Capabilities() *volume.CapabilitiesResponse {
 	log.Printf("%s capabilities\n", Name)
-	return volume.CapabilitiesResponse{
+	return &volume.CapabilitiesResponse{
 		Capabilities: volume.Capability{
 			Scope: "global",
 		},
