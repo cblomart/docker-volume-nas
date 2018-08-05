@@ -49,7 +49,7 @@ func (p *Nas) CheckVolumePath(name string) (string, error) {
 }
 
 // Create creates a new volume in the mount point
-func (p *Nas) Create(request volume.CreateRequest) error {
+func (p *Nas) Create(request *volume.CreateRequest) error {
 	log.Printf("%s create volume %s\n", Name, request.Name)
 	path := fmt.Sprintf("%s/%s", p.GetMountPoint(), request.Name)
 	info, err := os.Stat(path)
