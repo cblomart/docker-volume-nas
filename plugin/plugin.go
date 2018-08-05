@@ -9,7 +9,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/docker/go-plugins-helpers/volume"
+	"github.com/cblomart/go-plugins-helpers/volume"
 )
 
 const (
