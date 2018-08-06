@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"runtime"
 	"strconv"
+	"syscall"
 )
 
 // Regex for volume names
@@ -67,16 +68,17 @@ func CheckName(name string) bool {
 }
 
 // CheckTrackFile checks the existence of a track file and returns its path
-func CheckTrackFile(path string) (string, error) {
+func checkTrackFile(path string) (string, error) {
 	trackPath := fmt.Sprintf("%s/%s", path, TrackFile)
 	// check existance of track file
-	if _, err := os.Stat(trackPath); err != nil {
+	_, err := os.Stat(trackPath)
+	if err != nil {
 		if os.IsNotExist(err) {
 			trackFile, err := os.OpenFile(trackPath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
 			if err != nil {
 				return "", err
 			}
-			trackFile.WriteString("unkonwn volume user\n")
+			trackFile.WriteString("#unkonwn volume\n")
 			err = trackFile.Close()
 			if err != nil {
 				return "", err
@@ -86,4 +88,40 @@ func CheckTrackFile(path string) (string, error) {
 		}
 	}
 	return trackPath, nil
+}
+
+func createPath(path string, uid, gid int) error {
+	err := os.Mkdir(path, 700)
+	if err != nil {
+		log.Printf("Could not create path %s: %s", path, err)
+		return err
+	}
+	// create track file
+	trackPath := fmt.Sprintf("%s/%s", path, TrackFile)
+	trackFile, err := os.OpenFile(trackPath, os.O_RDONLY|os.O_CREATE, 0600)
+	if err != nil {
+		log.Printf("Could not create track file in path %s: %s", path, err)
+		return err
+	}
+	err = trackFile.Close()
+	if err != nil {
+		log.Printf("Could not close track file %s: %s", trackPath, err)
+		return err
+	}
+	// set uid and gid
+	if (uid != 0 || gid != 0) && runtime.GOOS != "windows" {
+		err := syscall.Chown(path, uid, gid)
+		if err != nil {
+			log.Printf("Could not change owner to %d:%d for %s\n", uid, gid, path)
+			return err
+		}
+	}
+	return nil
+}
+
+func logClose(v string, f *os.File) {
+	err := f.Close()
+	if err != nil {
+		log.Printf("Cannot close track file for volume %s: %s", v, err)
+	}
 }
