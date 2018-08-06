@@ -2,7 +2,9 @@ package plugin
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -62,4 +64,26 @@ func (p *Nas) dump(v interface{}) {
 func CheckName(name string) bool {
 	validname := regexp.MustCompile(nameRegex)
 	return validname.MatchString(name)
+}
+
+// CheckTrackFile checks the existence of a track file and returns its path
+func CheckTrackFile(path string) (string, error) {
+	trackPath := fmt.Sprintf("%s/%s", path, TrackFile)
+	// check existance of track file
+	if _, err := os.Stat(trackPath); err != nil {
+		if os.IsNotExist(err) {
+			trackFile, err := os.OpenFile(trackPath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
+			if err != nil {
+				return "", err
+			}
+			trackFile.WriteString("unkonwn volume user\n")
+			err = trackFile.Close()
+			if err != nil {
+				return "", err
+			}
+		} else {
+			return "", err
+		}
+	}
+	return trackPath, nil
 }

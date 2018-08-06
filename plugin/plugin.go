@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -15,6 +16,8 @@ import (
 const (
 	// Name is the plugin name
 	Name = "nas"
+	// TrackFile is the name of the file used to track mounts
+	TrackFile = ".track"
 )
 
 // Nas is a simple nas plugin for docker
@@ -66,6 +69,19 @@ func (p *Nas) Create(request *volume.CreateRequest) error {
 			log.Printf("Could not create volume %s in path %s: %s", request.Name, path, err)
 			return err
 		}
+		// create track file
+		trackPath := fmt.Sprintf("%s/%s", path, TrackFile)
+		trackFile, err := os.OpenFile(trackPath, os.O_RDONLY|os.O_CREATE, 0600)
+		if err != nil {
+			log.Printf("Could not create track file in path %s: %s", path, err)
+			return err
+		}
+		err = trackFile.Close()
+		if err != nil {
+			log.Printf("Could not close track file %s: %s", trackPath, err)
+			return err
+		}
+		// set uid and gid
 		uid, gid := GetGUID(request.Options)
 		if (uid != 0 || gid != 0) && runtime.GOOS != "windows" {
 			err := syscall.Chown(path, uid, gid)
@@ -155,6 +171,14 @@ func (p *Nas) Remove(request *volume.RemoveRequest) error {
 		log.Printf("Could not check path for %s: %s\n", request.Name, err)
 		return err
 	}
+	trackPath := fmt.Sprintf("%s/%s", path, TrackFile)
+	info, err := os.Stat(trackPath)
+	if err != nil {
+		return err
+	}
+	if info.Size() != 0 {
+		return fmt.Errorf("cannot remove volume %s with track file not empty", request.Name)
+	}
 	return os.RemoveAll(path)
 }
 
@@ -177,7 +201,7 @@ func (p *Nas) Path(request *volume.PathRequest) (*volume.PathResponse, error) {
 	return &response, nil
 }
 
-// Mount does nothing as the mount point should already be mounted
+// Mount tracks the mount call to prevent removal when a volume is used
 func (p *Nas) Mount(request *volume.MountRequest) (*volume.MountResponse, error) {
 	log.Printf("%s mount volume %s\n", Name, request.Name)
 	if !CheckName(request.Name) {
@@ -188,6 +212,40 @@ func (p *Nas) Mount(request *volume.MountRequest) (*volume.MountResponse, error)
 		log.Printf("Could not get path for %s: %s", request.Name, err)
 		return nil, err
 	}
+	// add the request to the track file
+	trackPath, err := CheckTrackFile(path)
+	if err != nil {
+		return nil, err
+	}
+	// open the file
+	trackFile, err := os.OpenFile(trackPath, os.O_RDWR|os.O_APPEND, 0600)
+	if err != nil {
+		return nil, err
+	}
+	defer trackFile.Close()
+	// read the file and check for id presence
+	scanner := bufio.NewScanner(trackFile)
+	idfound := false
+	for scanner.Scan() {
+		if request.ID == scanner.Text() {
+			idfound = true
+			break
+		}
+	}
+	// if not found add it to file
+	if !idfound {
+		if _, err = trackFile.WriteString(fmt.Sprintf("%s\n", request.ID)); err != nil {
+			return nil, err
+		}
+		err := trackFile.Sync()
+		if err != nil {
+			return nil, err
+		}
+		err = trackFile.Close()
+		if err != nil {
+			return nil, err
+		}
+	}
 	response := volume.MountResponse{
 		Mountpoint: path,
 	}
@@ -196,16 +254,60 @@ func (p *Nas) Mount(request *volume.MountRequest) (*volume.MountResponse, error)
 	return &response, nil
 }
 
-// Unmount does nothing as the mount point should already be mounted
+// Unmount tracks the mount call to prevent removal when a volume is used
 func (p *Nas) Unmount(request *volume.UnmountRequest) error {
 	log.Printf("%s unmount volume %s\n", Name, request.Name)
 	if !CheckName(request.Name) {
 		return fmt.Errorf("Invalid character in %s", request.Name)
 	}
-	_, err := p.CheckVolumePath(request.Name)
+	path, err := p.CheckVolumePath(request.Name)
 	if err != nil {
 		log.Printf("Could not check path for %s: %s\n", request.Name, err)
 		return err
+	}
+	// add the request to the track file
+	trackPath, err := CheckTrackFile(path)
+	if err != nil {
+		return err
+	}
+	// open the file
+	trackFile, err := os.OpenFile(trackPath, os.O_RDWR, 0600)
+	if err != nil {
+		return err
+	}
+	// remove id from file
+	lines := []string{}
+	idfound := false
+	scanner := bufio.NewScanner(trackFile)
+	for scanner.Scan() {
+		if scanner.Text() != request.ID {
+			lines = append(lines, scanner.Text())
+		} else {
+			idfound = true
+		}
+	}
+	if idfound {
+		_, err := trackFile.Seek(0, 0)
+		if err != nil {
+			return err
+		}
+		// write lines to file
+		for _, line := range lines {
+			_, err := trackFile.WriteString(fmt.Sprintf("%s\n", line))
+			if err != nil {
+				trackFile.Close()
+				return err
+			}
+		}
+		trackFile.Truncate(0)
+		err = trackFile.Sync()
+		if err != nil {
+			return err
+		}
+		err = trackFile.Close()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
