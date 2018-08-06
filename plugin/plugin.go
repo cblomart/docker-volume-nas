@@ -282,7 +282,7 @@ func (p *Nas) Unmount(request *volume.UnmountRequest) error {
 		log.Printf("Requestor id not found in track file for volume %s\n", request.Name)
 		return nil
 	}
-	_, err = trackFile.Seek(0, 0)
+	err = trackFile.Truncate(0)
 	if err != nil {
 		return err
 	}
@@ -293,7 +293,6 @@ func (p *Nas) Unmount(request *volume.UnmountRequest) error {
 			return err
 		}
 	}
-	trackFile.Truncate(0)
 	err = trackFile.Sync()
 	if err != nil {
 		log.Printf("Cannot sync track file for volume %s: %s\n", request.Name, err)
