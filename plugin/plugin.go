@@ -67,8 +67,7 @@ func (p *Nas) Create(request *volume.CreateRequest) error {
 			log.Printf("error creating volume %s folder %s: %s", request.Name, path, err)
 			return err
 		}
-	}
-	if err != nil {
+	} else if err != nil {
 		log.Printf("Stat error on path %s: %s", path, err)
 		return err
 	}
