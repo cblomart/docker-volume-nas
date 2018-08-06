@@ -282,8 +282,16 @@ func (p *Nas) Unmount(request *volume.UnmountRequest) error {
 		log.Printf("Requestor id %s not found in track file for volume %s\n", request.ID, request.Name)
 		return nil
 	}
+	// truncate the file
 	err = trackFile.Truncate(0)
 	if err != nil {
+		log.Printf("Error truncating track file for volume %s\n", request.Name)
+		return err
+	}
+	// seek begining
+	_, err = trackFile.Seek(0, 0)
+	if err != nil {
+		log.Printf("Error seeking begin of track file for volume %s\n", request.Name)
 		return err
 	}
 	// write lines to file
