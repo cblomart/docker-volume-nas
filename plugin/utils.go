@@ -74,8 +74,10 @@ func checkTrackFile(path string) (string, error) {
 	_, err := os.Stat(trackPath)
 	if err != nil {
 		if os.IsNotExist(err) {
+			log.Printf("Creating track file for untracked volume %s. An administrator action will be required to remove.\n", path)
 			trackFile, err := os.OpenFile(trackPath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
 			if err != nil {
+				log.Printf("Cannot open/create track file %s: %s\n", trackPath, err)
 				return "", err
 			}
 			trackFile.WriteString("#unkonwn volume\n")
@@ -100,12 +102,12 @@ func createPath(path string, uid, gid int) error {
 	trackPath := fmt.Sprintf("%s/%s", path, TrackFile)
 	trackFile, err := os.OpenFile(trackPath, os.O_RDONLY|os.O_CREATE, 0600)
 	if err != nil {
-		log.Printf("Could not create track file in path %s: %s", path, err)
+		log.Printf("Could not create track file in path %s: %s\n", path, err)
 		return err
 	}
 	err = trackFile.Close()
 	if err != nil {
-		log.Printf("Could not close track file %s: %s", trackPath, err)
+		log.Printf("Could not close track file %s: %s\n", trackPath, err)
 		return err
 	}
 	// set uid and gid
@@ -122,6 +124,6 @@ func createPath(path string, uid, gid int) error {
 func logClose(v string, f *os.File) {
 	err := f.Close()
 	if err != nil {
-		log.Printf("Cannot close track file for volume %s: %s", v, err)
+		log.Printf("Cannot close track file for volume %s: %s\n", v, err)
 	}
 }

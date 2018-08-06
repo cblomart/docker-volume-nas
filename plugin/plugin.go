@@ -64,14 +64,14 @@ func (p *Nas) Create(request *volume.CreateRequest) error {
 		uid, gid := GetGUID(request.Options)
 		err := createPath(path, uid, gid)
 		if err != nil {
-			log.Printf("error creating volume %s folder %s: %s", request.Name, path, err)
+			log.Printf("error creating volume %s folder %s: %s\n", request.Name, path, err)
 			return err
 		}
 	} else if err != nil {
-		log.Printf("Stat error on path %s: %s", path, err)
+		log.Printf("Stat error on path %s: %s\n", path, err)
 		return err
 	} else if !info.IsDir() {
-		log.Printf("path %s is a file", path)
+		log.Printf("path %s is a file\n", path)
 		return fmt.Errorf("path %s is a file", path)
 	}
 	p.verbose(fmt.Sprintf("Created volume %s with path %s", request.Name, path))
@@ -103,7 +103,7 @@ func (p *Nas) List() (*volume.ListResponse, error) {
 		path := fmt.Sprintf("%s/%s", p.GetMountPoint(), info.Name())
 		_, err := checkTrackFile(path)
 		if err != nil {
-			log.Printf("Error checking track file for volume %s: %s", info.Name(), err)
+			log.Printf("Error checking track file for volume %s: %s\n", info.Name(), err)
 			continue
 		}
 		v := volume.Volume{
@@ -125,12 +125,12 @@ func (p *Nas) Get(request *volume.GetRequest) (*volume.GetResponse, error) {
 	}
 	path, err := p.CheckVolumePath(request.Name)
 	if err != nil {
-		log.Printf("%s error getting volume: %s", Name, err)
+		log.Printf("%s error getting volume: %s\n", Name, err)
 		return nil, err
 	}
 	_, err = checkTrackFile(path)
 	if err != nil {
-		log.Printf("Error checking track file for volume %s: %s", request.Name, err)
+		log.Printf("Error checking track file for volume %s: %s\n", request.Name, err)
 		return nil, err
 	}
 	response := volume.GetResponse{
@@ -179,7 +179,7 @@ func (p *Nas) Path(request *volume.PathRequest) (*volume.PathResponse, error) {
 	}
 	_, err = checkTrackFile(path)
 	if err != nil {
-		log.Printf("Error checking track file for volume %s: %s", request.Name, err)
+		log.Printf("Error checking track file for volume %s: %s\n", request.Name, err)
 		return nil, err
 	}
 	response := volume.PathResponse{
@@ -198,19 +198,19 @@ func (p *Nas) Mount(request *volume.MountRequest) (*volume.MountResponse, error)
 	}
 	path, err := p.CheckVolumePath(request.Name)
 	if err != nil {
-		log.Printf("Could not get path for %s: %s", request.Name, err)
+		log.Printf("Could not get path for %s: %s\n", request.Name, err)
 		return nil, err
 	}
 	// add the request to the track file
 	trackPath, err := checkTrackFile(path)
 	if err != nil {
-		log.Printf("Error checking track file for volume %s: %s", request.Name, err)
+		log.Printf("Error checking track file for volume %s: %s\n", request.Name, err)
 		return nil, err
 	}
 	// open the file
 	trackFile, err := os.OpenFile(trackPath, os.O_RDWR|os.O_APPEND, 0600)
 	if err != nil {
-		log.Printf("Cannot open trackfile for volume %s: %s", request.Name, err)
+		log.Printf("Cannot open trackfile for volume %s: %s\n", request.Name, err)
 		return nil, err
 	}
 	defer logClose(request.Name, trackFile)
@@ -226,12 +226,12 @@ func (p *Nas) Mount(request *volume.MountRequest) (*volume.MountResponse, error)
 	// if not found add it to file
 	if !idfound {
 		if _, err = trackFile.WriteString(fmt.Sprintf("%s\n", request.ID)); err != nil {
-			log.Printf("Cannot append requestor id to track file for volume %s: %s", request.Name, err)
+			log.Printf("Cannot append requestor id to track file for volume %s: %s\n", request.Name, err)
 			return nil, err
 		}
 		err := trackFile.Sync()
 		if err != nil {
-			log.Printf("Cannot sync track file for volume %s: %s", request.Name, err)
+			log.Printf("Cannot sync track file for volume %s: %s\n", request.Name, err)
 			return nil, err
 		}
 	}
@@ -257,13 +257,13 @@ func (p *Nas) Unmount(request *volume.UnmountRequest) error {
 	// add the request to the track file
 	trackPath, err := checkTrackFile(path)
 	if err != nil {
-		log.Printf("Error checking track file for volume %s: %s", request.Name, err)
+		log.Printf("Error checking track file for volume %s: %s\n", request.Name, err)
 		return err
 	}
 	// open the file
 	trackFile, err := os.OpenFile(trackPath, os.O_RDWR, 0600)
 	if err != nil {
-		log.Printf("Cannot open trackfile for volume %s: %s", request.Name, err)
+		log.Printf("Cannot open trackfile for volume %s: %s\n", request.Name, err)
 		return err
 	}
 	defer logClose(request.Name, trackFile)
@@ -279,7 +279,7 @@ func (p *Nas) Unmount(request *volume.UnmountRequest) error {
 		}
 	}
 	if !idfound {
-		log.Printf("Requestor id not found in track file for volume %s", request.Name)
+		log.Printf("Requestor id not found in track file for volume %s\n", request.Name)
 		return nil
 	}
 	_, err = trackFile.Seek(0, 0)
@@ -296,7 +296,7 @@ func (p *Nas) Unmount(request *volume.UnmountRequest) error {
 	trackFile.Truncate(0)
 	err = trackFile.Sync()
 	if err != nil {
-		log.Printf("Cannot sync track file for volume %s: %s", request.Name, err)
+		log.Printf("Cannot sync track file for volume %s: %s\n", request.Name, err)
 		return err
 	}
 	return nil
