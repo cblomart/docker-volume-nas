@@ -70,9 +70,7 @@ func (p *Nas) Create(request *volume.CreateRequest) error {
 	} else if err != nil {
 		log.Printf("Stat error on path %s: %s", path, err)
 		return err
-	}
-	// path does exist
-	if !info.IsDir() {
+	} else if !info.IsDir() {
 		log.Printf("path %s is a file", path)
 		return fmt.Errorf("path %s is a file", path)
 	}
