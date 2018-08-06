@@ -279,7 +279,7 @@ func (p *Nas) Unmount(request *volume.UnmountRequest) error {
 		}
 	}
 	if !idfound {
-		log.Printf("Requestor id not found in track file for volume %s\n", request.Name)
+		log.Printf("Requestor id %s not found in track file for volume %s\n", request.ID, request.Name)
 		return nil
 	}
 	err = trackFile.Truncate(0)
