@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cblomart/go-plugins-helpers/volume"
+	"github.com/docker/go-plugins-helpers/volume"
 )
 
 const (
