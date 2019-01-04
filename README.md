@@ -30,7 +30,7 @@ A common way to persist data for containers is to use bind and nfs/cifs/fuse mou
       +-----------------+
 ```
 
-By using a volume plugin the folders can be automaticaly created and removed.
+By using a volume plugin the folders can be automaticaly created.
 
 ```ascii
   +---------------+ +---------------+
@@ -51,3 +51,8 @@ By using a volume plugin the folders can be automaticaly created and removed.
       | exports /docker |
       +-----------------+
 ```
+
+# TODO / Investigation
+
+An evolution of that would be to mount specific folders only when a container needs it. A bit like automapping does. This helps reduce the number of mounts open on an nfs export. Additionally a host not running a container won't have the nfs share mounted.
+Tell me if intresting, otherwise i will take my time on it.
